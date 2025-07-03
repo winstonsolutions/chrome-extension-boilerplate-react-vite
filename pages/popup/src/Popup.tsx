@@ -1,12 +1,9 @@
 import '@src/Popup.css';
-import { t } from '@extension/i18n';
-import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
-import { exampleThemeStorage } from '@extension/storage';
-import { cn, ErrorDisplay, LoadingSpinner, ToggleButton } from '@extension/ui';
+import { withErrorBoundary, withSuspense } from '@extension/shared';
+import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
 import { useState } from 'react';
 
 const Popup = () => {
-  const { isLight } = useStorage(exampleThemeStorage);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
@@ -303,8 +300,8 @@ const Popup = () => {
   };
 
   return (
-    <div className={cn('App', isLight ? 'bg-slate-50' : 'bg-gray-800')}>
-      <header className={cn('App-header', isLight ? 'text-gray-900' : 'text-gray-100')}>
+    <div className={cn('App', 'bg-slate-50')}>
+      <header className={cn('App-header', 'text-gray-900')}>
         <button
           className={cn(
             'screenshot-button mb-4 rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700',
@@ -342,10 +339,6 @@ const Popup = () => {
             ))}
           </div>
         )}
-
-        <ToggleButton onClick={exampleThemeStorage.toggle} className="mt-4">
-          {t('toggleTheme')}
-        </ToggleButton>
       </header>
     </div>
   );
