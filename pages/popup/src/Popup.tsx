@@ -69,38 +69,44 @@ const Popup = () => {
 
               const controlsDiv = document.createElement('div');
               controlsDiv.style.cssText =
-                'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:white;padding:10px;border-radius:5px;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:10000000;display:flex;gap:10px;align-items:center;';
+                'position:fixed !important;bottom:20px !important;left:50% !important;transform:translateX(-50%) !important;background:white !important;padding:8px !important;border-radius:5px !important;box-shadow:0 2px 10px rgba(0,0,0,0.2) !important;z-index:10000000 !important;display:flex !important;gap:5px !important;align-items:center !important;font-family:Arial,sans-serif !important;font-size:14px !important;line-height:normal !important;box-sizing:border-box !important;';
 
               // 添加宽度控制
               const widthLabel = document.createElement('label');
-              widthLabel.textContent = '宽度: ';
+              widthLabel.textContent = 'Width: ';
+              widthLabel.style.cssText =
+                'font-family:Arial,sans-serif !important;font-size:14px !important;margin-right:0 !important;font-weight:normal !important;color:black !important;display:flex !important;align-items:center !important;white-space:nowrap !important;';
               const widthInput = document.createElement('input');
               widthInput.type = 'number';
               widthInput.value = '500';
               widthInput.min = '10';
-              widthInput.style.cssText = 'width:70px;margin:0 10px;';
+              widthInput.style.cssText =
+                'width:60px !important;height:28px !important;margin:0 5px !important;font-family:Arial,sans-serif !important;font-size:14px !important;padding:0 2px !important;box-sizing:border-box !important;border:1px solid #ccc !important;border-radius:3px !important;background:white !important;color:black !important;display:inline-block !important;text-align:center !important;';
               widthLabel.appendChild(widthInput);
 
               // 添加高度控制
               const heightLabel = document.createElement('label');
-              heightLabel.textContent = '高度: ';
+              heightLabel.textContent = 'Height: ';
+              heightLabel.style.cssText =
+                'font-family:Arial,sans-serif !important;font-size:14px !important;margin-right:0 !important;font-weight:normal !important;color:black !important;display:flex !important;align-items:center !important;white-space:nowrap !important;';
               const heightInput = document.createElement('input');
               heightInput.type = 'number';
               heightInput.value = '400';
               heightInput.min = '10';
-              heightInput.style.cssText = 'width:70px;margin:0 10px;';
+              heightInput.style.cssText =
+                'width:60px !important;height:28px !important;margin:0 5px !important;font-family:Arial,sans-serif !important;font-size:14px !important;padding:0 2px !important;box-sizing:border-box !important;border:1px solid #ccc !important;border-radius:3px !important;background:white !important;color:black !important;display:inline-block !important;text-align:center !important;';
               heightLabel.appendChild(heightInput);
 
               // 添加按钮
               const captureBtn = document.createElement('button');
-              captureBtn.textContent = '截图';
+              captureBtn.textContent = 'Capture';
               captureBtn.style.cssText =
-                'background:#4CAF50;color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;';
+                'background:#4CAF50 !important;color:white !important;border:none !important;padding:4px 10px !important;border-radius:3px !important;cursor:pointer !important;font-family:Arial,sans-serif !important;font-size:14px !important;height:28px !important;margin:0 2px !important;font-weight:normal !important;text-transform:none !important;box-shadow:none !important;display:inline-block !important;line-height:20px !important;';
 
               const cancelBtn = document.createElement('button');
-              cancelBtn.textContent = '取消';
+              cancelBtn.textContent = 'Cancel';
               cancelBtn.style.cssText =
-                'background:#f44336;color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;';
+                'background:#f44336 !important;color:white !important;border:none !important;padding:4px 10px !important;border-radius:3px !important;cursor:pointer !important;font-family:Arial,sans-serif !important;font-size:14px !important;height:28px !important;margin:0 2px !important;font-weight:normal !important;text-transform:none !important;box-shadow:none !important;display:inline-block !important;line-height:20px !important;';
 
               // 实现框体拖动
               let isDragging = false;
