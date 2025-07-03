@@ -1,0 +1,22 @@
+{
+  "extensionDescription": {
+    "description": "扩展描述",
+    "message": "一个截图工具，允许您捕获网页的特定区域。"
+  },
+  "extensionName": {
+    "description": "扩展名称",
+    "message": "截图工具"
+  },
+  "toggleTheme": {
+    "description": "切换主题按钮",
+    "message": "切换主题"
+  },
+  "hello": {
+    "description": "问候用户",
+    "message": "你好 $1"
+  },
+  "injectButton": {
+    "description": "注入脚本按钮",
+    "message": "注入脚本"
+  }
+}
