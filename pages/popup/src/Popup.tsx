@@ -44,8 +44,28 @@ const Popup = () => {
               // 创建截图框和控制面板
               const frameDiv = document.createElement('div');
               frameDiv.style.cssText =
-                'position:fixed;width:500px;height:400px;border:2px dashed red;background:rgba(0,0,0,0.1);z-index:9999999;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;';
+                'position:fixed;width:500px;height:400px;border:2px dashed red;background:rgba(0,0,0,0.1);z-index:9999999;top:50%;left:50%;transform:translate(-50%,-50%);cursor:move;';
               document.body.appendChild(frameDiv);
+
+              // 添加拖动把手（8个方向）
+              const handles = [
+                { position: 'top-left', cursor: 'nwse-resize', style: 'top:-5px;left:-5px;' },
+                { position: 'top', cursor: 'ns-resize', style: 'top:-5px;left:50%;transform:translateX(-50%);' },
+                { position: 'top-right', cursor: 'nesw-resize', style: 'top:-5px;right:-5px;' },
+                { position: 'right', cursor: 'ew-resize', style: 'top:50%;right:-5px;transform:translateY(-50%);' },
+                { position: 'bottom-right', cursor: 'nwse-resize', style: 'bottom:-5px;right:-5px;' },
+                { position: 'bottom', cursor: 'ns-resize', style: 'bottom:-5px;left:50%;transform:translateX(-50%);' },
+                { position: 'bottom-left', cursor: 'nesw-resize', style: 'bottom:-5px;left:-5px;' },
+                { position: 'left', cursor: 'ew-resize', style: 'top:50%;left:-5px;transform:translateY(-50%);' },
+              ];
+
+              const handleElements = handles.map(handle => {
+                const elem = document.createElement('div');
+                elem.style.cssText = `position:absolute;width:10px;height:10px;background:white;border:1px solid red;border-radius:50%;cursor:${handle.cursor};z-index:10000000;${handle.style}`;
+                elem.dataset.position = handle.position;
+                frameDiv.appendChild(elem);
+                return elem;
+              });
 
               const controlsDiv = document.createElement('div');
               controlsDiv.style.cssText =
@@ -82,25 +102,161 @@ const Popup = () => {
               cancelBtn.style.cssText =
                 'background:#f44336;color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;';
 
+              // 实现框体拖动
+              let isDragging = false;
+              let isResizing = false;
+              let startX = 0;
+              let startY = 0;
+              let frameX = 0;
+              let frameY = 0;
+              let frameWidth = 500;
+              let frameHeight = 400;
+              let resizeHandle = '';
+
+              // 初始化框体位置
+              const updateFramePosition = function () {
+                frameDiv.style.width = frameWidth + 'px';
+                frameDiv.style.height = frameHeight + 'px';
+                frameDiv.style.top = frameY + 'px';
+                frameDiv.style.left = frameX + 'px';
+                frameDiv.style.transform = 'none'; // 取消默认的居中变换
+
+                // 更新输入框的值
+                widthInput.value = frameWidth.toString();
+                heightInput.value = frameHeight.toString();
+              };
+
+              // 初始化框体的位置（居中）
+              const initRect = () => {
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                frameX = (windowWidth - frameWidth) / 2;
+                frameY = (windowHeight - frameHeight) / 2;
+                updateFramePosition();
+              };
+
+              initRect();
+
+              // 处理鼠标按下事件
+              frameDiv.addEventListener('mousedown', e => {
+                // 判断是否点击到了调整大小的把手
+                const target = e.target as HTMLElement;
+                if (target !== frameDiv) return;
+
+                e.preventDefault();
+                isDragging = true;
+                isResizing = false;
+                startX = e.clientX;
+                startY = e.clientY;
+              });
+
+              // 处理调整大小的鼠标事件
+              handleElements.forEach(handle => {
+                handle.addEventListener('mousedown', e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  isDragging = false;
+                  isResizing = true;
+                  startX = e.clientX;
+                  startY = e.clientY;
+                  resizeHandle = (e.target as HTMLElement).dataset.position || '';
+                });
+              });
+
+              // 处理鼠标移动事件
+              document.addEventListener('mousemove', e => {
+                if (!isDragging && !isResizing) return;
+
+                e.preventDefault();
+
+                const moveX = e.clientX - startX;
+                const moveY = e.clientY - startY;
+
+                if (isDragging) {
+                  // 移动整个框
+                  frameX += moveX;
+                  frameY += moveY;
+                  updateFramePosition();
+                } else if (isResizing) {
+                  // 调整框的大小
+                  switch (resizeHandle) {
+                    case 'top-left':
+                      frameX += moveX;
+                      frameY += moveY;
+                      frameWidth -= moveX;
+                      frameHeight -= moveY;
+                      break;
+                    case 'top':
+                      frameY += moveY;
+                      frameHeight -= moveY;
+                      break;
+                    case 'top-right':
+                      frameY += moveY;
+                      frameWidth += moveX;
+                      frameHeight -= moveY;
+                      break;
+                    case 'right':
+                      frameWidth += moveX;
+                      break;
+                    case 'bottom-right':
+                      frameWidth += moveX;
+                      frameHeight += moveY;
+                      break;
+                    case 'bottom':
+                      frameHeight += moveY;
+                      break;
+                    case 'bottom-left':
+                      frameX += moveX;
+                      frameWidth -= moveX;
+                      frameHeight += moveY;
+                      break;
+                    case 'left':
+                      frameX += moveX;
+                      frameWidth -= moveX;
+                      break;
+                  }
+
+                  // 确保宽度和高度不小于最小值
+                  if (frameWidth < 50) frameWidth = 50;
+                  if (frameHeight < 50) frameHeight = 50;
+
+                  updateFramePosition();
+                }
+
+                startX = e.clientX;
+                startY = e.clientY;
+              });
+
+              // 处理鼠标释放事件
+              document.addEventListener('mouseup', () => {
+                isDragging = false;
+                isResizing = false;
+              });
+
               // 更新尺寸事件
               widthInput.onchange = function () {
                 const newWidth = parseInt((this as HTMLInputElement).value);
                 if (!isNaN(newWidth) && newWidth > 0) {
-                  frameDiv.style.width = newWidth + 'px';
+                  frameWidth = newWidth;
+                  updateFramePosition();
                 }
               };
 
               heightInput.onchange = function () {
                 const newHeight = parseInt((this as HTMLInputElement).value);
                 if (!isNaN(newHeight) && newHeight > 0) {
-                  frameDiv.style.height = newHeight + 'px';
+                  frameHeight = newHeight;
+                  updateFramePosition();
                 }
               };
 
               // 截图功能
               captureBtn.onclick = function () {
-                // 隐藏控制界面
+                // 隐藏控制界面和调整大小的把手
                 controlsDiv.style.display = 'none';
+                handleElements.forEach(handle => {
+                  handle.style.display = 'none';
+                });
                 frameDiv.style.border = 'none';
                 frameDiv.style.background = 'transparent';
 
@@ -111,6 +267,9 @@ const Popup = () => {
                     if (!dataUrl) {
                       alert('截图失败，请重试');
                       controlsDiv.style.display = 'flex';
+                      handleElements.forEach(handle => {
+                        handle.style.display = 'block';
+                      });
                       frameDiv.style.border = '2px dashed red';
                       frameDiv.style.background = 'rgba(0,0,0,0.1)';
                       return;
@@ -120,13 +279,12 @@ const Popup = () => {
                     const img = new Image();
                     img.onload = function () {
                       const canvas = document.createElement('canvas');
-                      const rect = frameDiv.getBoundingClientRect();
-                      canvas.width = rect.width;
-                      canvas.height = rect.height;
+                      canvas.width = frameWidth;
+                      canvas.height = frameHeight;
 
                       const ctx = canvas.getContext('2d');
                       if (ctx) {
-                        ctx.drawImage(img, rect.left, rect.top, rect.width, rect.height, 0, 0, rect.width, rect.height);
+                        ctx.drawImage(img, frameX, frameY, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
 
                         // 转换为数据URL
                         const croppedDataUrl = canvas.toDataURL('image/png');
