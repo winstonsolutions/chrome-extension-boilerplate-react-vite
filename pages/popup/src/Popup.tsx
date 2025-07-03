@@ -418,72 +418,22 @@ const Popup = () => {
     }
   };
 
-  // 创建一个普通网页标签并在那里激活截图
-  const openNewTabWithScreenshot = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    setLogs([]);
-    addLog('准备在新标签页中截图...');
-
-    try {
-      // 创建一个新标签页，并导航到百度
-      const newTab = await chrome.tabs.create({ url: 'https://www.baidu.com' });
-      const newTabId = newTab.id;
-
-      if (!newTabId) {
-        throw new Error('无法获取新标签页ID');
-      }
-
-      addLog(`新标签页创建成功，ID: ${newTabId}`);
-
-      // 设置监听页面加载完成的事件
-      chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
-        if (tabId === newTabId && changeInfo.status === 'complete') {
-          addLog('新标签页加载完成，移除监听器');
-          // 移除监听器避免重复调用
-          chrome.tabs.onUpdated.removeListener(listener);
-
-          // 给页面一些额外的时间完全加载DOM
-          setTimeout(() => {
-            injectSimpleScreenshotTool(tabId);
-          }, 1000);
-        }
-      });
-    } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : '未知错误';
-      addLog(`打开新标签页失败: ${errorMsg}`);
-      setErrorMessage(`打开新标签页失败: ${errorMsg || '未知错误'}`);
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className={cn('App', 'bg-slate-50')}>
       <header className={cn('App-header', 'text-gray-900')}>
         <button
           className={cn(
-            'screenshot-button mb-4 rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700',
+            'screenshot-button mb-4 w-64 rounded-md bg-blue-600 px-10 py-3 text-lg font-medium text-white transition-colors hover:bg-blue-700',
             isLoading && 'cursor-not-allowed opacity-50',
           )}
           onClick={handleDirectScreenshot}
           disabled={isLoading}>
-          {isLoading ? '正在加载...' : '开始截图 (推荐)'}
-        </button>
-
-        <button
-          className={cn(
-            'mb-4 rounded-md bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700',
-            isLoading && 'cursor-not-allowed opacity-50',
-          )}
-          onClick={openNewTabWithScreenshot}
-          disabled={isLoading}>
-          在新标签页中截图
+          {isLoading ? 'Loading...' : 'Capture'}
         </button>
 
         {errorMessage && (
           <div className="error-message mb-4 max-w-[250px] rounded-md bg-red-100 p-3 text-sm text-red-700">
             {errorMessage}
-            {errorMessage.includes('浏览器内部页面') && <p className="mt-2 text-xs">请点击"在新标签页中截图"按钮</p>}
           </div>
         )}
 
