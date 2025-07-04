@@ -41,11 +41,16 @@ const manifest = {
     default_popup: 'popup/index.html',
     default_icon: 'icon-32.png',
   },
-  chrome_url_overrides: {
-    newtab: 'new-tab/index.html',
-  },
+  // chrome_url_overrides: {
+  //   newtab: 'new-tab/index.html',
+  // },
   icons: {
     '128': 'icon-128.png',
+  },
+  commands: {
+    'direct-screenshot': {
+      description: '直接截图',
+    },
   },
   content_security_policy: {
     extension_pages: "script-src 'self'; object-src 'self'",
