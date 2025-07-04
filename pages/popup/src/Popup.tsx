@@ -5,49 +5,41 @@ import { useState } from 'react';
 
 const Popup = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [logs, setLogs] = useState<string[]>([]);
 
-  // 添加日志
-  const addLog = (message: string) => {
-    setLogs(prev => [...prev, message]);
-    console.log(message);
-  };
-
-  // 直接注入简化版的截图工具
+  // Inject simplified screenshot tool
   const injectSimpleScreenshotTool = async (tabId: number) => {
     try {
-      addLog('准备注入截图工具...');
+      console.log('Preparing to inject screenshot tool...');
 
-      // 先尝试直接注入脚本字符串
+      // First try to inject script string
       await chrome.scripting.executeScript({
         target: { tabId },
         func: () => {
-          // 在这里添加一个全局标记，表示代码被执行了
+          // Add a global marker indicating the code has been executed
           window._SCREENSHOT_INJECTION_STARTED = true;
-          console.log('注入函数开始执行');
+          console.log('Injection function started executing');
         },
       });
 
-      addLog('注入初始化成功');
+      console.log('Initialization injection successful');
 
-      // 注入主要的截图代码
+      // Inject the main screenshot code
       await chrome.scripting
         .executeScript({
           target: { tabId },
           func: function () {
             try {
-              console.log('开始执行截图工具代码');
+              console.log('Starting screenshot tool code');
               window._SCREENSHOT_CODE_RUNNING = true;
 
-              // 直接执行代码，而不是使用 new Function
-              // 创建截图框和控制面板
+              // Directly execute code instead of using new Function
+              // Create screenshot frame and control panel
               const frameDiv = document.createElement('div');
               frameDiv.style.cssText =
                 'position:fixed;width:500px;height:400px;border:2px dashed red;background:rgba(0,0,0,0.1);z-index:9999999;top:50%;left:50%;transform:translate(-50%,-50%);cursor:move;';
               document.body.appendChild(frameDiv);
 
-              // 添加拖动把手（8个方向）
+              // Add drag handles (8 directions)
               const handles = [
                 { position: 'top-left', cursor: 'nwse-resize', style: 'top:-5px;left:-5px;' },
                 { position: 'top', cursor: 'ns-resize', style: 'top:-5px;left:50%;transform:translateX(-50%);' },
@@ -71,7 +63,7 @@ const Popup = () => {
               controlsDiv.style.cssText =
                 'position:fixed !important;bottom:20px !important;left:50% !important;transform:translateX(-50%) !important;background:white !important;padding:8px !important;border-radius:5px !important;box-shadow:0 2px 10px rgba(0,0,0,0.2) !important;z-index:10000000 !important;display:flex !important;gap:5px !important;align-items:center !important;font-family:Arial,sans-serif !important;font-size:14px !important;line-height:normal !important;box-sizing:border-box !important;';
 
-              // 添加宽度控制
+              // Add width control
               const widthLabel = document.createElement('label');
               widthLabel.textContent = 'Width: ';
               widthLabel.style.cssText =
@@ -84,7 +76,7 @@ const Popup = () => {
                 'width:60px !important;height:28px !important;margin:0 5px !important;font-family:Arial,sans-serif !important;font-size:14px !important;padding:0 2px !important;box-sizing:border-box !important;border:1px solid #ccc !important;border-radius:3px !important;background:white !important;color:black !important;display:inline-block !important;text-align:center !important;';
               widthLabel.appendChild(widthInput);
 
-              // 添加高度控制
+              // Add height control
               const heightLabel = document.createElement('label');
               heightLabel.textContent = 'Height: ';
               heightLabel.style.cssText =
@@ -97,7 +89,7 @@ const Popup = () => {
                 'width:60px !important;height:28px !important;margin:0 5px !important;font-family:Arial,sans-serif !important;font-size:14px !important;padding:0 2px !important;box-sizing:border-box !important;border:1px solid #ccc !important;border-radius:3px !important;background:white !important;color:black !important;display:inline-block !important;text-align:center !important;';
               heightLabel.appendChild(heightInput);
 
-              // 添加按钮
+              // Add button
               const captureBtn = document.createElement('button');
               captureBtn.textContent = 'Capture';
               captureBtn.style.cssText =
@@ -108,7 +100,7 @@ const Popup = () => {
               cancelBtn.style.cssText =
                 'background:#f44336 !important;color:white !important;border:none !important;padding:4px 10px !important;border-radius:3px !important;cursor:pointer !important;font-family:Arial,sans-serif !important;font-size:14px !important;height:28px !important;margin:0 2px !important;font-weight:normal !important;text-transform:none !important;box-shadow:none !important;display:inline-block !important;line-height:20px !important;';
 
-              // 实现框体拖动
+              // Implement frame dragging
               let isDragging = false;
               let isResizing = false;
               let startX = 0;
@@ -119,20 +111,20 @@ const Popup = () => {
               let frameHeight = 400;
               let resizeHandle = '';
 
-              // 初始化框体位置
+              // Initialize frame position
               const updateFramePosition = function () {
                 frameDiv.style.width = frameWidth + 'px';
                 frameDiv.style.height = frameHeight + 'px';
                 frameDiv.style.top = frameY + 'px';
                 frameDiv.style.left = frameX + 'px';
-                frameDiv.style.transform = 'none'; // 取消默认的居中变换
+                frameDiv.style.transform = 'none'; // Cancel default center transform
 
-                // 更新输入框的值
+                // Update input field values
                 widthInput.value = frameWidth.toString();
                 heightInput.value = frameHeight.toString();
               };
 
-              // 初始化框体的位置（居中）
+              // Initialize frame position (center)
               const initRect = () => {
                 const windowWidth = window.innerWidth;
                 const windowHeight = window.innerHeight;
@@ -143,9 +135,9 @@ const Popup = () => {
 
               initRect();
 
-              // 处理鼠标按下事件
+              // Handle mouse down event
               frameDiv.addEventListener('mousedown', e => {
-                // 判断是否点击到了调整大小的把手
+                // Check if clicked on resizing handle
                 const target = e.target as HTMLElement;
                 if (target !== frameDiv) return;
 
@@ -156,7 +148,7 @@ const Popup = () => {
                 startY = e.clientY;
               });
 
-              // 处理调整大小的鼠标事件
+              // Handle resizing mouse event
               handleElements.forEach(handle => {
                 handle.addEventListener('mousedown', e => {
                   e.preventDefault();
@@ -169,7 +161,7 @@ const Popup = () => {
                 });
               });
 
-              // 处理鼠标移动事件
+              // Handle mouse move event
               document.addEventListener('mousemove', e => {
                 if (!isDragging && !isResizing) return;
 
@@ -179,12 +171,12 @@ const Popup = () => {
                 const moveY = e.clientY - startY;
 
                 if (isDragging) {
-                  // 移动整个框
+                  // Move entire frame
                   frameX += moveX;
                   frameY += moveY;
                   updateFramePosition();
                 } else if (isResizing) {
-                  // 调整框的大小
+                  // Resize frame
                   switch (resizeHandle) {
                     case 'top-left':
                       frameX += moveX;
@@ -222,7 +214,7 @@ const Popup = () => {
                       break;
                   }
 
-                  // 确保宽度和高度不小于最小值
+                  // Ensure width and height are not less than minimum value
                   if (frameWidth < 50) frameWidth = 50;
                   if (frameHeight < 50) frameHeight = 50;
 
@@ -233,13 +225,13 @@ const Popup = () => {
                 startY = e.clientY;
               });
 
-              // 处理鼠标释放事件
+              // Handle mouse release event
               document.addEventListener('mouseup', () => {
                 isDragging = false;
                 isResizing = false;
               });
 
-              // 更新尺寸事件
+              // Update size event
               widthInput.onchange = function () {
                 const newWidth = parseInt((this as HTMLInputElement).value);
                 if (!isNaN(newWidth) && newWidth > 0) {
@@ -256,9 +248,9 @@ const Popup = () => {
                 }
               };
 
-              // 截图功能
+              // Screenshot function
               captureBtn.onclick = function () {
-                // 隐藏控制界面和调整大小的把手
+                // Hide control interface and resizing handles
                 controlsDiv.style.display = 'none';
                 handleElements.forEach(handle => {
                   handle.style.display = 'none';
@@ -266,12 +258,12 @@ const Popup = () => {
                 frameDiv.style.border = 'none';
                 frameDiv.style.background = 'transparent';
 
-                // 等待UI更新
+                // Wait for UI update
                 setTimeout(function () {
-                  // 截图
+                  // Screenshot
                   chrome.runtime.sendMessage({ type: 'captureVisibleTab' }, function (dataUrl) {
                     if (!dataUrl) {
-                      alert('截图失败，请重试');
+                      alert('Screenshot failed, please try again');
                       controlsDiv.style.display = 'flex';
                       handleElements.forEach(handle => {
                         handle.style.display = 'block';
@@ -281,7 +273,7 @@ const Popup = () => {
                       return;
                     }
 
-                    // 创建一个图片对象
+                    // Create image object
                     const img = new Image();
                     img.onload = function () {
                       const canvas = document.createElement('canvas');
@@ -292,19 +284,19 @@ const Popup = () => {
                       if (ctx) {
                         ctx.drawImage(img, frameX, frameY, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
 
-                        // 转换为数据URL
+                        // Convert to data URL
                         const croppedDataUrl = canvas.toDataURL('image/png');
 
-                        // 发送到后台保存
+                        // Send to backend for saving
                         chrome.runtime.sendMessage({
                           type: 'saveScreenshot',
                           imageData: croppedDataUrl,
                         });
                       } else {
-                        console.error('无法获取Canvas上下文');
+                        console.error('Cannot get Canvas context');
                       }
 
-                      // 清理UI
+                      // Clean UI
                       document.body.removeChild(frameDiv);
                       document.body.removeChild(controlsDiv);
                     };
@@ -314,25 +306,25 @@ const Popup = () => {
                 }, 100);
               };
 
-              // 取消功能
+              // Cancel function
               cancelBtn.onclick = function () {
                 document.body.removeChild(frameDiv);
                 document.body.removeChild(controlsDiv);
               };
 
-              // 组装UI元素
+              // Assemble UI elements
               controlsDiv.appendChild(widthLabel);
               controlsDiv.appendChild(heightLabel);
               controlsDiv.appendChild(captureBtn);
               controlsDiv.appendChild(cancelBtn);
               document.body.appendChild(controlsDiv);
 
-              console.log('截图工具代码执行完成');
+              console.log('Screenshot tool code execution completed');
               window._SCREENSHOT_CODE_COMPLETED = true;
               return { success: true };
             } catch (err: unknown) {
-              console.error('执行截图代码出错:', err);
-              const errorMessage = err instanceof Error ? err.message : '未知错误';
+              console.error('Screenshot code execution error:', err);
+              const errorMessage = err instanceof Error ? err.message : 'Unknown error';
               return {
                 success: false,
                 error: errorMessage,
@@ -343,67 +335,39 @@ const Popup = () => {
         .then(results => {
           const result = results[0]?.result;
           if (result?.success) {
-            addLog('截图工具注入成功');
+            console.log('Screenshot tool injection successful');
           } else {
-            addLog(`截图工具注入失败: ${result?.error || '未知错误'}`);
-            setErrorMessage(`截图工具注入失败: ${result?.error || '未知错误'}`);
+            console.log(`Screenshot tool injection failed: ${result?.error || 'Unknown error'}`);
+            setErrorMessage(`Screenshot tool injection failed: ${result?.error || 'Unknown error'}`);
           }
         })
         .catch(err => {
-          addLog(`注入脚本出错: ${err.message}`);
-          setErrorMessage(`注入脚本出错: ${err.message}`);
+          console.log(`Script injection error: ${err.message}`);
+          setErrorMessage(`Script injection error: ${err.message}`);
         });
 
-      // 检查注入是否成功
-      setTimeout(async () => {
-        try {
-          const checkResults = await chrome.scripting.executeScript({
-            target: { tabId },
-            func: () => ({
-              started: window._SCREENSHOT_INJECTION_STARTED === true,
-              running: window._SCREENSHOT_CODE_RUNNING === true,
-              completed: window._SCREENSHOT_CODE_COMPLETED === true,
-            }),
-          });
-
-          const status = checkResults[0]?.result;
-          addLog(`截图状态检查: ${JSON.stringify(status)}`);
-
-          // 关闭弹出窗口
-          window.close();
-        } catch (err: unknown) {
-          const errorMessage = err instanceof Error ? err.message : '未知错误';
-          addLog(`状态检查失败: ${errorMessage}`);
-        }
-      }, 1000);
+      // No need for timeout check anymore since popup will be closed already
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : '未知错误';
-      addLog(`注入截图工具失败: ${errorMsg}`);
-      setErrorMessage(`注入失败: ${errorMsg}`);
-      setIsLoading(false);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`Screenshot tool injection failed: ${errorMsg}`);
+      setErrorMessage(`Injection failed: ${errorMsg}`);
     }
   };
 
-  // 直接在当前标签页中执行截图
+  // Execute screenshot directly in current tab
   const handleDirectScreenshot = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    setLogs([]);
-    addLog('开始执行截图...');
-
     try {
-      // 获取当前标签页
+      // Get current tab
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tabs[0]?.id) {
-        throw new Error('没有找到活动标签页');
+        setErrorMessage('No active tab found');
+        return;
       }
 
       const tabId = tabs[0].id;
       const url = tabs[0].url || '';
 
-      addLog(`当前标签页: ${url}`);
-
-      // 检查是否是特殊页面
+      // Check if it's a special page
       if (
         url.startsWith('chrome://') ||
         url.startsWith('edge://') ||
@@ -411,16 +375,22 @@ const Popup = () => {
         url.startsWith('chrome-extension://') ||
         url.startsWith('devtools://')
       ) {
-        throw new Error('无法在浏览器内部页面上使用此功能');
+        setErrorMessage('This feature cannot be used on browser internal pages');
+        return;
       }
 
-      // 注入并执行简化版的截图工具
-      await injectSimpleScreenshotTool(tabId);
+      // Close popup immediately
+      console.log('Starting screenshot on tab:', url);
+
+      // Start injection process but don't await it
+      injectSimpleScreenshotTool(tabId);
+
+      // Close popup window immediately
+      window.close();
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : '未知错误';
-      addLog(`截图失败: ${errorMsg}`);
-      setErrorMessage(`截图失败: ${errorMsg}`);
-      setIsLoading(false);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`Screenshot failed: ${errorMsg}`);
+      setErrorMessage(`Screenshot failed: ${errorMsg}`);
     }
   };
 
@@ -431,11 +401,9 @@ const Popup = () => {
         <button
           className={cn(
             'screenshot-button mb-4 w-64 rounded-md bg-blue-600 px-10 py-3 text-lg font-medium text-white transition-colors hover:bg-blue-700',
-            isLoading && 'cursor-not-allowed opacity-50',
           )}
-          onClick={handleDirectScreenshot}
-          disabled={isLoading}>
-          {isLoading ? 'Loading...' : 'Capture'}
+          onClick={handleDirectScreenshot}>
+          Capture
         </button>
 
         {errorMessage && (
@@ -443,23 +411,12 @@ const Popup = () => {
             {errorMessage}
           </div>
         )}
-
-        {logs.length > 0 && (
-          <div className="logs mb-4 max-h-[100px] max-w-[250px] overflow-y-auto rounded-md bg-gray-100 p-3 text-xs text-gray-700">
-            <p className="mb-1 font-bold">日志:</p>
-            {logs.map((log, index) => (
-              <div key={index} className="log-item">
-                {log}
-              </div>
-            ))}
-          </div>
-        )}
       </header>
     </div>
   );
 };
 
-// 添加全局类型声明
+// Add global type declaration
 declare global {
   interface Window {
     _SCREENSHOT_INJECTION_STARTED?: boolean;
