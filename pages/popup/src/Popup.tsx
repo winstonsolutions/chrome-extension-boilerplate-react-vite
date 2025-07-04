@@ -428,20 +428,6 @@ const Popup = () => {
       <header className={cn('App-header', 'text-gray-900')}>
         <h1 className="mb-4 text-xl font-bold text-blue-600">PixelCapture</h1>
 
-        <div className="format-selector mb-4 flex justify-center gap-2">
-          {formats.map(format => (
-            <button
-              key={format.id}
-              className={cn(
-                'rounded-md px-3 py-1 text-sm font-medium transition-colors',
-                selectedFormat === format.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-              )}
-              onClick={() => setSelectedFormat(format.id)}>
-              {format.label}
-            </button>
-          ))}
-        </div>
-
         <button
           className={cn(
             'screenshot-button mb-4 w-64 rounded-md bg-blue-600 px-10 py-3 text-lg font-medium text-white transition-colors hover:bg-blue-700',
@@ -449,6 +435,20 @@ const Popup = () => {
           onClick={handleDirectScreenshot}>
           Capture
         </button>
+
+        <div className="format-selector mb-4 flex w-64 justify-between">
+          {formats.map(format => (
+            <button
+              key={format.id}
+              className={cn(
+                'mx-0.5 flex-1 rounded-md px-3 py-1 text-sm font-medium transition-colors',
+                selectedFormat === format.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+              )}
+              onClick={() => setSelectedFormat(format.id)}>
+              {format.label}
+            </button>
+          ))}
+        </div>
 
         {errorMessage && (
           <div className="error-message mb-4 max-w-[250px] rounded-md bg-red-100 p-3 text-sm text-red-700">
