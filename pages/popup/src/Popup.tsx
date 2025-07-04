@@ -427,6 +427,7 @@ const Popup = () => {
   return (
     <div className={cn('App', 'bg-slate-50')}>
       <header className={cn('App-header', 'text-gray-900')}>
+        <h1 className="mb-4 text-xl font-bold text-blue-600">PixelCapture</h1>
         <button
           className={cn(
             'screenshot-button mb-4 w-64 rounded-md bg-blue-600 px-10 py-3 text-lg font-medium text-white transition-colors hover:bg-blue-700',
