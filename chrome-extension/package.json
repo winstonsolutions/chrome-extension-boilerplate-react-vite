@@ -22,6 +22,7 @@
     "@extension/env": "workspace:*",
     "@extension/shared": "workspace:*",
     "@extension/storage": "workspace:*",
+    "jspdf": "^3.0.1",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {

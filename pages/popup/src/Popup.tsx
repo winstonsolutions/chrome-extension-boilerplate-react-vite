@@ -5,6 +5,15 @@ import { useState } from 'react';
 
 const Popup = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<string>('png');
+
+  // Formats configuration
+  const formats = [
+    { id: 'png', label: 'PNG', mime: 'image/png' },
+    { id: 'jpeg', label: 'JPG', mime: 'image/jpeg' },
+    { id: 'webp', label: 'WebP', mime: 'image/webp' },
+    { id: 'pdf', label: 'PDF', mime: 'application/pdf' },
+  ];
 
   // Inject simplified screenshot tool
   const injectSimpleScreenshotTool = async (tabId: number) => {
@@ -23,14 +32,19 @@ const Popup = () => {
 
       console.log('Initialization injection successful');
 
+      // Get selected format from state and pass to script
+      const format = formats.find(f => f.id === selectedFormat);
+
       // Inject the main screenshot code
       await chrome.scripting
         .executeScript({
           target: { tabId },
-          func: function () {
+          func: function (format) {
             try {
               console.log('Starting screenshot tool code');
               window._SCREENSHOT_CODE_RUNNING = true;
+              // Store format information
+              window._SCREENSHOT_FORMAT = format;
 
               // Directly execute code instead of using new Function
               // Create screenshot frame and control panel
@@ -284,13 +298,27 @@ const Popup = () => {
                       if (ctx) {
                         ctx.drawImage(img, frameX, frameY, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
 
-                        // Convert to data URL
-                        const croppedDataUrl = canvas.toDataURL('image/png');
+                        // Use selected format for image conversion
+                        let imageData;
+                        const formatInfo = window._SCREENSHOT_FORMAT || { id: 'png', mime: 'image/png' };
+
+                        // Handle PDF format specially
+                        if (formatInfo.id === 'pdf') {
+                          // For PDF, we still need to send PNG data and let background script handle conversion
+                          imageData = canvas.toDataURL('image/png');
+                        } else {
+                          // For other image formats, use the specified MIME type
+                          imageData = canvas.toDataURL(formatInfo.mime, 0.92);
+                        }
 
                         // Send to backend for saving
                         chrome.runtime.sendMessage({
                           type: 'saveScreenshot',
-                          imageData: croppedDataUrl,
+                          imageData: imageData,
+                          format: formatInfo.id,
+                          mime: formatInfo.mime,
+                          width: frameWidth,
+                          height: frameHeight,
                         });
                       } else {
                         console.error('Cannot get Canvas context');
@@ -331,6 +359,7 @@ const Popup = () => {
               };
             }
           },
+          args: [format],
         })
         .then(results => {
           const result = results[0]?.result;
@@ -398,6 +427,21 @@ const Popup = () => {
     <div className={cn('App', 'bg-slate-50')}>
       <header className={cn('App-header', 'text-gray-900')}>
         <h1 className="mb-4 text-xl font-bold text-blue-600">PixelCapture</h1>
+
+        <div className="format-selector mb-4 flex justify-center gap-2">
+          {formats.map(format => (
+            <button
+              key={format.id}
+              className={cn(
+                'rounded-md px-3 py-1 text-sm font-medium transition-colors',
+                selectedFormat === format.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+              )}
+              onClick={() => setSelectedFormat(format.id)}>
+              {format.label}
+            </button>
+          ))}
+        </div>
+
         <button
           className={cn(
             'screenshot-button mb-4 w-64 rounded-md bg-blue-600 px-10 py-3 text-lg font-medium text-white transition-colors hover:bg-blue-700',
@@ -422,6 +466,11 @@ declare global {
     _SCREENSHOT_INJECTION_STARTED?: boolean;
     _SCREENSHOT_CODE_RUNNING?: boolean;
     _SCREENSHOT_CODE_COMPLETED?: boolean;
+    _SCREENSHOT_FORMAT?: {
+      id: string;
+      label: string;
+      mime: string;
+    };
   }
 }
 

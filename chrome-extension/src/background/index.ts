@@ -1,6 +1,7 @@
 import 'webextension-polyfill';
 import { colorfulLog } from '@extension/shared';
 import { exampleThemeStorage } from '@extension/storage';
+import { jsPDF } from 'jspdf';
 
 exampleThemeStorage.get().then(theme => {
   console.log('Current theme:', theme);
@@ -423,6 +424,11 @@ declare global {
     _SCREENSHOT_INJECTION_STARTED?: boolean;
     _SCREENSHOT_CODE_RUNNING?: boolean;
     _SCREENSHOT_CODE_COMPLETED?: boolean;
+    _SCREENSHOT_FORMAT?: {
+      id: string;
+      label: string;
+      mime: string;
+    };
   }
 }
 
@@ -491,25 +497,68 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // 处理保存截图
   if (message.type === 'saveScreenshot') {
-    const { imageData } = message;
-    console.log('Saving screenshot');
+    const { imageData, format = 'png', width = 500, height = 400 } = message;
+    console.log(`Saving screenshot in ${format} format`);
 
     // 获取当前日期和时间作为文件名
     const date = new Date();
-    const fileName = `screenshot_${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date
+    const dateString = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date
       .getDate()
       .toString()
       .padStart(2, '0')}_${date.getHours().toString().padStart(2, '0')}${date
       .getMinutes()
       .toString()
-      .padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}.png`;
+      .padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}`;
 
-    // 下载图片
-    chrome.downloads.download({
-      url: imageData,
-      filename: fileName,
-      saveAs: true,
-    });
+    // 如果是PDF格式，使用jsPDF库转换
+    if (format === 'pdf') {
+      try {
+        console.log('Converting to PDF', width, height);
+
+        // 创建PDF文档，设置合适的尺寸
+        const orientation = width > height ? 'l' : 'p'; // landscape or portrait
+        const pdf = new jsPDF({
+          orientation,
+          unit: 'px',
+          format: [width, height],
+          hotfixes: ['px_scaling'],
+        });
+
+        // 将图像添加到PDF (需要移除URL前缀)
+        const base64Image = imageData.replace('data:image/png;base64,', '');
+        pdf.addImage(base64Image, 'PNG', 0, 0, width, height);
+
+        // 生成PDF并下载
+        const pdfOutput = pdf.output('datauristring');
+        chrome.downloads.download({
+          url: pdfOutput,
+          filename: `screenshot_${dateString}.pdf`,
+          saveAs: true,
+        });
+      } catch (error) {
+        console.error('PDF转换失败:', error);
+        // 如果PDF转换失败，回退到PNG格式
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'icon-128.png',
+          title: 'PDF转换失败',
+          message: '无法转换为PDF格式，已保存为PNG格式',
+        });
+
+        chrome.downloads.download({
+          url: imageData,
+          filename: `screenshot_${dateString}.png`,
+          saveAs: true,
+        });
+      }
+    } else {
+      // 下载其他图片格式
+      chrome.downloads.download({
+        url: imageData,
+        filename: `screenshot_${dateString}.${format}`,
+        saveAs: true,
+      });
+    }
 
     return true;
   }
