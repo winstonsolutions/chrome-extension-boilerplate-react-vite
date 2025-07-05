@@ -6,14 +6,27 @@ import { useState } from 'react';
 const Popup = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<string>('png');
+  const [isPro] = useState<boolean>(false); // Mock pro status, default to false
 
   // Formats configuration
   const formats = [
     { id: 'png', label: 'PNG', mime: 'image/png' },
     { id: 'jpeg', label: 'JPG', mime: 'image/jpeg' },
     { id: 'webp', label: 'WebP', mime: 'image/webp' },
-    { id: 'pdf', label: 'PDF', mime: 'application/pdf' },
+    { id: 'pdf', label: 'PDF', mime: 'application/pdf', requiresPro: true },
   ];
+
+  // Handle format selection
+  const handleFormatSelect = (formatId: string) => {
+    const format = formats.find(f => f.id === formatId);
+    if (format?.requiresPro && !isPro) {
+      setErrorMessage('PDF export requires a Pro account');
+      return;
+    }
+
+    setSelectedFormat(formatId);
+    setErrorMessage(null);
+  };
 
   // Inject simplified screenshot tool
   const injectSimpleScreenshotTool = async (tabId: number) => {
@@ -386,6 +399,12 @@ const Popup = () => {
   // Execute screenshot directly in current tab
   const handleDirectScreenshot = async () => {
     try {
+      // Check if trying to use PDF without Pro access
+      if (selectedFormat === 'pdf' && !isPro) {
+        setErrorMessage('PDF export requires a Pro account');
+        return;
+      }
+
       // Get current tab
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tabs[0]?.id) {
@@ -441,11 +460,12 @@ const Popup = () => {
             <button
               key={format.id}
               className={cn(
-                'rounded-md px-2 py-2 text-sm font-medium transition-colors',
+                'relative rounded-md px-2 py-2 text-sm font-medium transition-colors',
                 selectedFormat === format.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
               )}
-              onClick={() => setSelectedFormat(format.id)}>
+              onClick={() => handleFormatSelect(format.id)}>
               {format.label}
+              {format.id === 'pdf' && <span className="pro-badge">Pro</span>}
             </button>
           ))}
         </div>
