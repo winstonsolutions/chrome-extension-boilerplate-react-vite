@@ -1,12 +1,50 @@
 import '@src/Popup.css';
 import { withErrorBoundary, withSuspense } from '@extension/shared';
 import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const Popup = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<string>('png');
   const [isPro] = useState<boolean>(false); // Mock pro status, default to false
+  const [currentEnv, setCurrentEnv] = useState<string>('development');
+
+  // Auth config - easy to change between environments
+  const AUTH_CONFIG = {
+    development: 'http://localhost:3000',
+    production: 'https://pixelcapture.example.com', // Replace with actual production URL when deployed
+  };
+
+  // Load environment setting from storage
+  useEffect(() => {
+    chrome.storage.local.get(['pixelcapture_env'], result => {
+      if (result.pixelcapture_env) {
+        setCurrentEnv(result.pixelcapture_env);
+      }
+    });
+  }, []);
+
+  const baseUrl = AUTH_CONFIG[currentEnv as keyof typeof AUTH_CONFIG];
+  const signInUrl = `${baseUrl}/sign-in`;
+
+  // Handle profile click
+  const handleProfileClick = (e: React.MouseEvent | React.KeyboardEvent) => {
+    // If shift key is pressed, toggle environment
+    if ('shiftKey' in e && e.shiftKey) {
+      const newEnv = currentEnv === 'development' ? 'production' : 'development';
+      setCurrentEnv(newEnv);
+      // Save to storage
+      chrome.storage.local.set({ pixelcapture_env: newEnv });
+
+      setErrorMessage(`Environment switched to: ${newEnv}`);
+      // Clear message after 2 seconds
+      setTimeout(() => setErrorMessage(null), 2000);
+      return;
+    }
+
+    // Normal click opens sign-in page
+    chrome.tabs.create({ url: signInUrl });
+  };
 
   // Formats configuration
   const formats = [
@@ -476,6 +514,29 @@ const Popup = () => {
           </div>
         )}
       </header>
+
+      {/* User Profile Avatar */}
+      <button
+        className="user-avatar"
+        onClick={handleProfileClick}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleProfileClick(e);
+          }
+        }}
+        title={`Sign in (${currentEnv})`}
+        aria-label="Sign in">
+        <div className={`avatar-icon ${currentEnv === 'production' ? 'production-env' : ''}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path
+              fillRule="evenodd"
+              d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+        <span className="avatar-status">Please sign in</span>
+      </button>
     </div>
   );
 };
