@@ -436,12 +436,12 @@ const Popup = () => {
           Capture
         </button>
 
-        <div className="format-selector mb-4 flex w-64 justify-between">
+        <div className="format-selector mb-4 grid w-64 grid-cols-2 gap-2">
           {formats.map(format => (
             <button
               key={format.id}
               className={cn(
-                'mx-0.5 flex-1 rounded-md px-3 py-1 text-sm font-medium transition-colors',
+                'rounded-md px-2 py-2 text-sm font-medium transition-colors',
                 selectedFormat === format.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
               )}
               onClick={() => setSelectedFormat(format.id)}>
