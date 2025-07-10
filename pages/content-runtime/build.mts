@@ -32,18 +32,17 @@ const configs = Object.entries(getContentScriptEntries(matchesDir)).map(([name, 
   }),
 }));
 
-const builds = configs.map(async ({ name, config }) => {
+// 序列化构建以避免资源争用导致的SIGKILL
+for (const { name, config } of configs) {
   const folder = resolve(matchesDir, name);
   const args = {
     ['--input']: resolve(folder, 'index.css'),
     ['--output']: resolve(rootDir, 'dist', name, 'index.css'),
     ['--config']: resolve(rootDir, 'tailwind.config.ts'),
-    ['--watch']: IS_DEV,
+    ['--watch']: false, // 临时禁用watch模式避免SIGKILL
   };
   await buildTW(args);
   //@ts-expect-error This is hidden property into vite's resolveConfig()
   config.configFile = false;
   await build(config);
-});
-
-await Promise.all(builds);
+}
