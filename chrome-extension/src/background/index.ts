@@ -3,6 +3,13 @@ import { colorfulLog } from '@extension/shared';
 import { exampleThemeStorage } from '@extension/storage';
 import { jsPDF } from 'jspdf';
 
+// User status interface
+interface UserStatus {
+  isLoggedIn: boolean;
+  isPro: boolean;
+  isInTrial: boolean;
+}
+
 exampleThemeStorage.get().then(theme => {
   console.log('Current theme:', theme);
 });
@@ -19,7 +26,7 @@ const contentScriptStatus = {
 };
 
 // 直接注入简化版的截图工具
-const injectSimpleScreenshotTool = async (tabId: number) => {
+let injectSimpleScreenshotTool = async (tabId: number) => {
   try {
     console.log('准备注入截图工具...');
 
@@ -571,6 +578,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  // Handle user status update
+  if (message.type === 'USER_STATUS_UPDATE') {
+    handleUserStatusUpdate(message.status);
+    sendResponse({ success: true });
+    return true;
+  }
+
   return true;
 });
 
@@ -619,3 +633,87 @@ chrome.commands.onCommand.addListener(command => {
     });
   }
 });
+
+// User status update handler
+const handleUserStatusUpdate = async (status: UserStatus) => {
+  try {
+    // Store user status
+    await chrome.storage.local.set({
+      userStatus: status,
+      lastUpdate: Date.now(),
+    });
+
+    // Display status update notification
+    const statusText = getStatusText(status);
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon-128.png',
+      title: 'Status Synced',
+      message: statusText,
+    });
+
+    colorfulLog(`User status updated: ${JSON.stringify(status)}`, 'success');
+  } catch (error) {
+    console.error('Failed to save user status:', error);
+  }
+};
+
+// Get status text description
+const getStatusText = (status: UserStatus): string => {
+  if (!status.isLoggedIn) return 'Not logged in';
+  if (status.isPro) return 'Pro user logged in';
+  if (status.isInTrial) return 'Trial user logged in';
+  return 'Free user logged in';
+};
+
+// Utility function to get user status
+const getUserStatus = async (): Promise<UserStatus> => {
+  try {
+    const result = await chrome.storage.local.get(['userStatus']);
+    return (
+      result.userStatus || {
+        isLoggedIn: false,
+        isPro: false,
+        isInTrial: false,
+      }
+    );
+  } catch (error) {
+    console.error('Failed to get user status:', error);
+    return {
+      isLoggedIn: false,
+      isPro: false,
+      isInTrial: false,
+    };
+  }
+};
+
+// Modify the existing screenshot permission check
+const originalInjectSimpleScreenshotTool = injectSimpleScreenshotTool;
+injectSimpleScreenshotTool = async (tabId: number) => {
+  const userStatus = await getUserStatus();
+
+  // Check login status
+  if (!userStatus.isLoggedIn) {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon-128.png',
+      title: 'Login Required',
+      message: 'Please login on the website to use screenshot feature',
+    });
+    return;
+  }
+
+  // Check permissions (Pro users or trial users can use advanced features)
+  if (!userStatus.isPro && !userStatus.isInTrial) {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon-128.png',
+      title: 'Permission Restricted',
+      message: 'Some features require Pro subscription or trial',
+    });
+    // Still allow basic screenshot feature
+  }
+
+  // Execute screenshot
+  await originalInjectSimpleScreenshotTool(tabId);
+};

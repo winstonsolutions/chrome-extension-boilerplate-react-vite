@@ -102,3 +102,42 @@ code {
   font-size: 10px;
   white-space: nowrap;
 }
+
+/* Logged-in avatar style */
+.avatar-icon.logged-in {
+  background-color: #3b82f6; /* Blue background */
+  color: white;
+}
+
+/* Loading state */
+.avatar-icon.loading {
+  background-color: #d1d5db; /* Lighter gray */
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Pro badge active state */
+.pro-badge.pro-active {
+  background-color: #10b981; /* Green background */
+  color: white;
+}
+
+/* Logged-in avatar text */
+.user-avatar .avatar-status {
+  color: #374151; /* Dark gray, more visible */
+}
+
+/* Disabled button style */
+.screenshot-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

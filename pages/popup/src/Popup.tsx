@@ -3,11 +3,37 @@ import { withErrorBoundary, withSuspense } from '@extension/shared';
 import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
 import { useState, useEffect } from 'react';
 
+// User status interface
+interface UserStatus {
+  isLoggedIn: boolean;
+  isPro: boolean;
+  isInTrial: boolean;
+}
+
 const Popup = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<string>('png');
-  const [isPro] = useState<boolean>(false); // Mock pro status, default to false
+  // Replace hardcoded isPro state with user status management
+  const [userStatus, setUserStatus] = useState<UserStatus>({
+    isLoggedIn: false,
+    isPro: false,
+    isInTrial: false,
+  });
+  const [statusLoading, setStatusLoading] = useState(true);
   const [currentEnv, setCurrentEnv] = useState<string>('development');
+
+  // Load user status
+  useEffect(() => {
+    chrome.storage.local.get(['userStatus']).then(result => {
+      if (result.userStatus) {
+        setUserStatus(result.userStatus);
+      }
+      setStatusLoading(false);
+    });
+  }, []);
+
+  // Calculate permissions
+  const isPro = userStatus.isPro || userStatus.isInTrial; // Pro or trial users have Pro permissions
 
   // Auth config - easy to change between environments
   const AUTH_CONFIG = {
@@ -480,6 +506,7 @@ const Popup = () => {
     }
   };
 
+  // Update the JSX to use the new status-dependent styling
   return (
     <div className={cn('App', 'bg-slate-50')}>
       <header className={cn('App-header', 'text-gray-900')}>
@@ -503,7 +530,11 @@ const Popup = () => {
               )}
               onClick={() => handleFormatSelect(format.id)}>
               {format.label}
-              {format.id === 'pdf' && <span className="pro-badge">Pro</span>}
+              {format.id === 'pdf' && (
+                <span className={cn('pro-badge', userStatus.isPro || userStatus.isInTrial ? 'pro-active' : '')}>
+                  Pro
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -526,7 +557,7 @@ const Popup = () => {
         }}
         title={`Sign in (${currentEnv})`}
         aria-label="Sign in">
-        <div className={`avatar-icon ${currentEnv === 'production' ? 'production-env' : ''}`}>
+        <div className={cn('avatar-icon', userStatus.isLoggedIn ? 'logged-in' : '', statusLoading ? 'loading' : '')}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
             <path
               fillRule="evenodd"
@@ -535,7 +566,7 @@ const Popup = () => {
             />
           </svg>
         </div>
-        <span className="avatar-status">Please sign in</span>
+        <span className="avatar-status">{userStatus.isLoggedIn ? 'Signed in' : 'Please sign in'}</span>
       </button>
     </div>
   );
