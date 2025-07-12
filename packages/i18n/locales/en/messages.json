@@ -1,11 +1,11 @@
 {
   "extensionDescription": {
     "description": "Description of the extension.",
-    "message": "A screenshot tool that allows you to capture specific areas of webpages."
+    "message": "A screen capture tool that allows you to capture specific areas of webpages."
   },
   "extensionName": {
     "description": "Name of the extension.",
-    "message": "Screenshot Tool"
+    "message": "PixelCapture"
   },
   "toggleTheme": {
     "message": "Toggle theme"

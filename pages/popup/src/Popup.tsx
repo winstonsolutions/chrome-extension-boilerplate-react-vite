@@ -485,9 +485,10 @@ const Popup = () => {
         url.startsWith('edge://') ||
         url.startsWith('about:') ||
         url.startsWith('chrome-extension://') ||
-        url.startsWith('devtools://')
+        url.startsWith('devtools://') ||
+        url.startsWith('https://chrome.google.com/')
       ) {
-        setErrorMessage('This feature cannot be used on browser internal pages');
+        setErrorMessage('Not on system pages');
         return;
       }
 
@@ -539,11 +540,7 @@ const Popup = () => {
           ))}
         </div>
 
-        {errorMessage && (
-          <div className="error-message mb-4 max-w-[250px] rounded-md bg-red-100 p-3 text-sm text-red-700">
-            {errorMessage}
-          </div>
-        )}
+        {errorMessage && <div className="error-message rounded-md bg-red-100 text-sm text-red-700">{errorMessage}</div>}
       </header>
 
       {/* User Profile Avatar */}

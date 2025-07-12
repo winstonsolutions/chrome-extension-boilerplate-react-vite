@@ -406,14 +406,15 @@ chrome.action.onClicked.addListener(async tab => {
       url.startsWith('edge://') ||
       url.startsWith('about:') ||
       url.startsWith('chrome-extension://') ||
-      url.startsWith('devtools://')
+      url.startsWith('devtools://') ||
+      url.startsWith('https://chrome.google.com/')
     ) {
       // 对于特殊页面，可以创建一个通知
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'icon-128.png',
-        title: '无法截图',
-        message: '无法在浏览器内部页面上使用此功能',
+        title: 'PixelCapture',
+        message: 'Not on system pages',
       });
       return;
     }
@@ -458,14 +459,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             url.startsWith('edge://') ||
             url.startsWith('about:') ||
             url.startsWith('chrome-extension://') ||
-            url.startsWith('devtools://')
+            url.startsWith('devtools://') ||
+            url.startsWith('https://chrome.google.com/')
           ) {
             // 对于特殊页面，创建一个通知
             chrome.notifications.create({
               type: 'basic',
               iconUrl: 'icon-128.png',
-              title: '无法截图',
-              message: '无法在浏览器内部页面上使用此功能',
+              title: 'PixelCapture',
+              message: 'Not on system pages',
             });
             return;
           }
@@ -610,14 +612,15 @@ chrome.commands.onCommand.addListener(command => {
             url.startsWith('edge://') ||
             url.startsWith('about:') ||
             url.startsWith('chrome-extension://') ||
-            url.startsWith('devtools://')
+            url.startsWith('devtools://') ||
+            url.startsWith('https://chrome.google.com/')
           ) {
             // 对于特殊页面，创建一个通知
             chrome.notifications.create({
               type: 'basic',
               iconUrl: 'icon-128.png',
-              title: '无法截图',
-              message: '无法在浏览器内部页面上使用此功能',
+              title: 'PixelCapture',
+              message: 'Not on system pages',
             });
             return;
           }
