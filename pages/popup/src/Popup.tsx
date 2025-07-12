@@ -20,7 +20,7 @@ const Popup = () => {
     isInTrial: false,
   });
   const [statusLoading, setStatusLoading] = useState(true);
-  const [currentEnv, setCurrentEnv] = useState<string>('development');
+  const [currentEnv, setCurrentEnv] = useState<string>('production');
 
   // Load user status
   useEffect(() => {
@@ -38,7 +38,7 @@ const Popup = () => {
   // Auth config - easy to change between environments
   const AUTH_CONFIG = {
     development: 'http://localhost:3000',
-    production: 'https://pixelcapture.example.com', // Replace with actual production URL when deployed
+    production: 'https://pixelcapture.winstontech.me', // Updated production URL
   };
 
   // Load environment setting from storage
