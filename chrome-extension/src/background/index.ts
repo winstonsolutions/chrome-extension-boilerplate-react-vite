@@ -10,6 +10,18 @@ interface UserStatus {
   isInTrial: boolean;
 }
 
+// Listen for extension installation
+chrome.runtime.onInstalled.addListener(details => {
+  if (details.reason === 'install') {
+    // Open a welcome tab
+    chrome.tabs.create({
+      url: 'https://pixelcapture.winstontech.me/',
+      active: true,
+    });
+    colorfulLog('🎉 Extension installed! Welcome page opened.', 'success');
+  }
+});
+
 exampleThemeStorage.get().then(theme => {
   console.log('Current theme:', theme);
 });
