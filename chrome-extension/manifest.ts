@@ -30,8 +30,7 @@ const manifest = {
   },
   version: packageJson.version,
   description: '__MSG_extensionDescription__',
-  host_permissions: ['<all_urls>'],
-  permissions: ['storage', 'scripting', 'tabs', 'notifications', 'downloads'],
+  permissions: ['activeTab', 'storage', 'scripting', 'notifications', 'downloads'],
   options_page: 'options/index.html',
   background: {
     service_worker: 'background.js',
@@ -57,7 +56,7 @@ const manifest = {
   },
   content_scripts: [
     {
-      matches: ['<all_urls>'],
+      matches: ['https://pixelcapture.winstontech.me/*'],
       js: ['content/all.iife.js'],
       run_at: 'document_idle',
     },
