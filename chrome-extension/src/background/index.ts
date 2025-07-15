@@ -2,6 +2,8 @@ import 'webextension-polyfill';
 import { colorfulLog } from '@extension/shared';
 import { exampleThemeStorage } from '@extension/storage';
 import { jsPDF } from 'jspdf';
+// 引入补丁文件，确保PDFObject在全局环境中可用
+import '../patches/jspdf-patch';
 
 // User status interface
 interface UserStatus {
