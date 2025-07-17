@@ -541,19 +541,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // 创建PDF文档，设置合适的尺寸，禁用所有外部依赖
         const orientation = width > height ? 'l' : 'p'; // landscape or portrait
 
-        // 强制禁用PDFObject功能，防止加载外部CDN
-        const originalPDFObject = (window as unknown as { PDFObject?: unknown }).PDFObject;
-        (window as unknown as { PDFObject?: unknown }).PDFObject = undefined;
-
+        // 创建PDF文档，patch文件已确保安全性
         const pdf = new jsPDF({
           orientation,
           unit: 'px',
           format: [width, height],
           hotfixes: ['px_scaling'],
         });
-
-        // 恢复原始值（虽然我们设置的就是undefined）
-        (window as unknown as { PDFObject?: unknown }).PDFObject = originalPDFObject;
 
         // 将图像添加到PDF (需要移除URL前缀)
         const base64Image = imageData.replace('data:image/png;base64,', '');

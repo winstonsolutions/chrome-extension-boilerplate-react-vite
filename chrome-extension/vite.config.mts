@@ -16,10 +16,7 @@ const replaceJsPDFCDNPlugin = (): PluginOption => ({
       const file = bundle[fileName];
       if (file.type === 'chunk' && file.code) {
         // 替换CDN链接为空字符串
-        file.code = file.code.replace(
-          /https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/pdfobject\/[^"]+/g,
-          ''
-        );
+        file.code = file.code.replace(/https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/pdfobject\/[^"]+/g, '');
       }
     });
   },
