@@ -538,8 +538,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       try {
         console.log('Converting to PDF', width, height);
 
-        // 创建PDF文档，设置合适的尺寸
+        // 创建PDF文档，设置合适的尺寸，禁用所有外部依赖
         const orientation = width > height ? 'l' : 'p'; // landscape or portrait
+
+        // 强制禁用PDFObject功能，防止加载外部CDN
+        const originalPDFObject = (window as unknown as { PDFObject?: unknown }).PDFObject;
+        (window as unknown as { PDFObject?: unknown }).PDFObject = undefined;
+
         const pdf = new jsPDF({
           orientation,
           unit: 'px',
@@ -547,17 +552,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           hotfixes: ['px_scaling'],
         });
 
+        // 恢复原始值（虽然我们设置的就是undefined）
+        (window as unknown as { PDFObject?: unknown }).PDFObject = originalPDFObject;
+
         // 将图像添加到PDF (需要移除URL前缀)
         const base64Image = imageData.replace('data:image/png;base64,', '');
         pdf.addImage(base64Image, 'PNG', 0, 0, width, height);
 
-        // 生成PDF并下载
-        const pdfOutput = pdf.output('datauristring');
-        chrome.downloads.download({
-          url: pdfOutput,
-          filename: `screenshot_${dateString}.pdf`,
-          saveAs: true,
-        });
+        // 生成PDF并直接下载，完全避免PDFObject功能
+        // 使用 'blob' 模式生成PDF，避免触发 pdfobjectnewwindow 代码路径
+        const pdfBlob = pdf.output('blob');
+        // 创建 Blob URL
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        // 使用 chrome.downloads API 下载
+        chrome.downloads.download(
+          {
+            url: pdfUrl,
+            filename: `screenshot_${dateString}.pdf`,
+            saveAs: true,
+          },
+          downloadId => {
+            // 监听下载完成事件，以便释放 Blob URL
+            if (downloadId) {
+              const listener = (delta: chrome.downloads.DownloadDelta) => {
+                if (delta.id === downloadId && delta.state && delta.state.current === 'complete') {
+                  // 下载完成后释放 Blob URL
+                  URL.revokeObjectURL(pdfUrl);
+                  // 移除监听器
+                  chrome.downloads.onChanged.removeListener(listener);
+                }
+              };
+              chrome.downloads.onChanged.addListener(listener);
+            }
+          },
+        );
       } catch (error) {
         console.error('PDF转换失败:', error);
         // 如果PDF转换失败，回退到PNG格式

@@ -1,17 +1,16 @@
-// jsPDF补丁文件，用于拦截和修改jsPDF的PDFObject加载行为
-import PDFObject from 'pdfobject';
+// jsPDF补丁文件 - 禁用PDFObject以避免Manifest V3违规
+// 不导入PDFObject，完全禁用相关功能
 
-// 正确扩展Window接口
+// 扩展Window接口但不实际添加PDFObject
 declare global {
   interface Window {
-    PDFObject: typeof PDFObject;
+    PDFObject?: unknown; // 可选，确保jsPDF不会尝试使用外部CDN
   }
 }
 
-// 将PDFObject添加到全局window对象
-window.PDFObject = PDFObject;
+// 明确设置PDFObject为undefined，强制jsPDF使用其他输出模式
+window.PDFObject = undefined;
 
-// jsPDF内部会检查PDFObject是否存在，如果存在就不会从CDN加载
-console.log('PDFObject patch applied, version:', PDFObject.pdfobjectversion);
+console.log('PDFObject功能已禁用，避免Manifest V3违规');
 
 export {};

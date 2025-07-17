@@ -7,6 +7,24 @@ import { watchOption } from '@extension/vite-config';
 import env, { IS_DEV, IS_PROD } from '@extension/env';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
+// 创建一个插件来替换jsPDF中的CDN链接
+const replaceJsPDFCDNPlugin = (): PluginOption => ({
+  name: 'replace-jspdf-cdn',
+  generateBundle(options, bundle) {
+    // 遍历所有输出的文件
+    Object.keys(bundle).forEach(fileName => {
+      const file = bundle[fileName];
+      if (file.type === 'chunk' && file.code) {
+        // 替换CDN链接为空字符串
+        file.code = file.code.replace(
+          /https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/pdfobject\/[^"]+/g,
+          ''
+        );
+      }
+    });
+  },
+});
+
 const rootDir = resolve(import.meta.dirname);
 const srcDir = resolve(rootDir, 'src');
 
@@ -30,6 +48,7 @@ export default defineConfig({
     makeManifestPlugin({ outDir }),
     IS_DEV && watchRebuildPlugin({ reload: true, id: 'chrome-extension-hmr' }),
     nodePolyfills(),
+    replaceJsPDFCDNPlugin(),
   ],
   publicDir: resolve(rootDir, 'public'),
   build: {
