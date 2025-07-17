@@ -570,37 +570,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('图像添加到PDF成功');
 
         // 生成PDF并直接下载，完全避免PDFObject功能
-        // 使用 'blob' 模式生成PDF，避免触发 pdfobjectnewwindow 代码路径
-        console.log('准备生成PDF blob');
-        const pdfBlob = pdf.output('blob');
-        console.log('PDF blob生成成功，大小:', pdfBlob.size);
-
-        // 创建 Blob URL
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        console.log('PDF URL创建成功:', pdfUrl);
+        // 在Service Worker环境中使用 data URL 而不是 blob URL
+        console.log('准备生成PDF数据');
+        const pdfDataUri = pdf.output('datauristring');
+        console.log('PDF data URI生成成功，长度:', pdfDataUri.length);
 
         // 使用 chrome.downloads API 下载
         console.log('开始下载PDF');
         chrome.downloads.download(
           {
-            url: pdfUrl,
+            url: pdfDataUri,
             filename: `screenshot_${dateString}.pdf`,
             saveAs: true,
           },
           downloadId => {
             console.log('PDF下载请求完成，downloadId:', downloadId);
-            // 监听下载完成事件，以便释放 Blob URL
             if (downloadId) {
-              const listener = (delta: chrome.downloads.DownloadDelta) => {
-                if (delta.id === downloadId && delta.state && delta.state.current === 'complete') {
-                  console.log('PDF下载完成');
-                  // 下载完成后释放 Blob URL
-                  URL.revokeObjectURL(pdfUrl);
-                  // 移除监听器
-                  chrome.downloads.onChanged.removeListener(listener);
-                }
-              };
-              chrome.downloads.onChanged.addListener(listener);
+              console.log('PDF下载开始，downloadId:', downloadId);
+            } else {
+              console.error('PDF下载失败，无法获取downloadId');
             }
           },
         );
